@@ -8,7 +8,7 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
 
-  <title>JANコード読み取りテスト</title>
+  <title>JANコード自動登録</title>
 
 
   <style>
@@ -58,7 +58,7 @@
 
       margin: 15px 0;
 
-      font-size: 16px;
+      font-size: 18px;
 
     }
 
@@ -81,27 +81,6 @@
 
     }
 
-
-    #registerButton {
-
-      display: none;
-
-      margin-top: 20px;
-
-      padding: 15px 30px;
-
-      font-size: 20px;
-
-      border: none;
-
-      border-radius: 8px;
-
-      background: #333;
-
-      color: white;
-
-    }
-
   </style>
 
 </head>
@@ -111,7 +90,7 @@
 
 
   <h1>
-    JANコード読み取りテスト
+    JANコード自動登録
   </h1>
 
 
@@ -129,13 +108,6 @@
   </div>
 
 
-  <button id="registerButton">
-
-    登録
-
-  </button>
-
-
   <!-- ========================================= -->
   <!-- バーコード読み取りライブラリ -->
   <!-- ========================================= -->
@@ -147,6 +119,7 @@
 
 
   <script>
+
 
     // =====================================================
     // HTML要素
@@ -160,29 +133,137 @@
       document.getElementById("result");
 
 
-    const registerButton =
-      document.getElementById("registerButton");
-
-
-    // 読み取ったJANコードを保持
+    // 読み取ったJANコード
 
     let currentJanCode = "";
 
 
     // =====================================================
-    // ライブラリ確認
+    // Apps Script Webアプリ
+    // =====================================================
+
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
+
+
+    // =====================================================
+    // JANコード登録
+    // =====================================================
+
+    async function registerJanCode() {
+
+
+      // ---------------------------------------------------
+      // JANコード確認
+      // ---------------------------------------------------
+
+      if (!currentJanCode) {
+
+        status.textContent =
+          "JANコードがありません";
+
+        return;
+
+      }
+
+
+      // ---------------------------------------------------
+      // 登録開始
+      // ---------------------------------------------------
+
+      status.textContent =
+        "登録中...";
+
+
+      try {
+
+
+        // -------------------------------------------------
+        // Apps Scriptへ送信
+        // -------------------------------------------------
+
+        await fetch(
+
+          API_URL,
+
+          {
+
+            method: "POST",
+
+            mode: "no-cors",
+
+            headers: {
+
+              "Content-Type":
+                "text/plain;charset=utf-8"
+
+            },
+
+            body: JSON.stringify({
+
+              janCode:
+                currentJanCode
+
+            })
+
+          }
+
+        );
+
+
+        // -------------------------------------------------
+        // 登録完了
+        // -------------------------------------------------
+
+        status.textContent =
+          "登録しました";
+
+
+        console.log(
+          "登録JAN：",
+          currentJanCode
+        );
+
+
+      }
+
+
+      catch (error) {
+
+
+        console.error(
+          "登録エラー：",
+          error
+        );
+
+
+        status.textContent =
+          "登録に失敗しました";
+
+
+      }
+
+    }
+
+
+    // =====================================================
+    // バーコードライブラリ確認
     // =====================================================
 
     if (
       typeof Html5Qrcode === "undefined"
     ) {
 
+
       status.textContent =
         "バーコードライブラリを読み込めませんでした";
 
+
     }
 
+
     else {
+
 
       status.textContent =
         "バーコードライブラリ読み込みOK";
@@ -249,13 +330,17 @@
           );
 
 
+          // ------------------------------------------------
           // JANコードを保持
+          // ------------------------------------------------
 
           currentJanCode =
             decodedText;
 
 
+          // ------------------------------------------------
           // 画面表示
+          // ------------------------------------------------
 
           result.textContent =
             decodedText;
@@ -265,15 +350,18 @@
             "読み取り成功";
 
 
-          // 登録ボタン表示
-
-          registerButton.style.display =
-            "inline-block";
-
-
+          // ------------------------------------------------
           // カメラ停止
+          // ------------------------------------------------
 
           scanner.stop();
+
+
+          // ------------------------------------------------
+          // 自動登録
+          // ------------------------------------------------
+
+          registerJanCode();
 
 
         },
@@ -314,140 +402,6 @@
 
     }
 
-
-// =====================================================
-// Apps Script Webアプリ
-// =====================================================
-
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
-
-
-// =====================================================
-// 登録ボタン
-// =====================================================
-
-registerButton.addEventListener(
-
-  "click",
-
-  async function() {
-
-
-    // -----------------------------------------------
-    // JANコード確認
-    // -----------------------------------------------
-
-    if (!currentJanCode) {
-
-      status.textContent =
-        "JANコードがありません";
-
-      return;
-
-    }
-
-
-    // -----------------------------------------------
-    // ボタンを一時停止
-    // -----------------------------------------------
-
-    registerButton.disabled =
-      true;
-
-
-    registerButton.textContent =
-      "登録中...";
-
-
-    status.textContent =
-      "データを送信しています";
-
-
-    try {
-
-
-      // ---------------------------------------------
-      // Apps Scriptへ送信
-      // ---------------------------------------------
-
-      await fetch(
-
-        API_URL,
-
-        {
-
-          method: "POST",
-
-          mode: "no-cors",
-
-          headers: {
-
-            "Content-Type":
-              "text/plain;charset=utf-8"
-
-          },
-
-          body: JSON.stringify({
-
-            janCode:
-              currentJanCode
-
-          })
-
-        }
-
-      );
-
-
-      // ---------------------------------------------
-      // 登録完了
-      // ---------------------------------------------
-
-      status.textContent =
-        "登録しました";
-
-
-      registerButton.textContent =
-        "登録完了";
-
-
-      console.log(
-        "登録JAN：",
-        currentJanCode
-      );
-
-
-    }
-
-
-    catch (error) {
-
-
-      console.error(
-        "登録エラー：",
-        error
-      );
-
-
-      status.textContent =
-        "登録に失敗しました";
-
-
-      registerButton.disabled =
-        false;
-
-
-      registerButton.textContent =
-        "登録";
-
-
-    }
-
-
-  }
-
-);
 
   </script>
 
