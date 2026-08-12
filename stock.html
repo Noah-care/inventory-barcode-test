@@ -242,10 +242,8 @@
 
               '<div class="detail">' +
 
-'賞味期限：' +
-formatDate(item.expiryDate) +
-'　数量：' +
-item.quantity
+'賞味期限：' + String(item.expiryDate).substring(0, 10) +
+'　数量：' + item.quantity
 
               '</div>';
 
