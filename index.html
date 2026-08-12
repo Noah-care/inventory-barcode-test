@@ -8,8 +8,7 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
 
-  <title>JANコード在庫登録</title>
-
+  <title>在庫登録</title>
 
   <style>
 
@@ -75,11 +74,79 @@
 
       border-radius: 10px;
 
-      font-size: 28px;
+      font-size: 26px;
 
       font-weight: bold;
 
       word-break: break-all;
+
+    }
+
+
+    #registerArea {
+
+      display: none;
+
+      margin-top: 20px;
+
+      padding: 20px;
+
+      background: white;
+
+      border-radius: 10px;
+
+      text-align: left;
+
+    }
+
+
+    .label {
+
+      display: block;
+
+      margin-top: 15px;
+
+      margin-bottom: 5px;
+
+      font-weight: bold;
+
+    }
+
+
+    input {
+
+      width: 100%;
+
+      box-sizing: border-box;
+
+      padding: 12px;
+
+      font-size: 18px;
+
+      border: 1px solid #ccc;
+
+      border-radius: 6px;
+
+    }
+
+
+    #registerButton {
+
+      width: 100%;
+
+      margin-top: 25px;
+
+      padding: 15px;
+
+      font-size: 20px;
+
+      border: none;
+
+      border-radius: 8px;
+
+      background: #333;
+
+      color: white;
 
     }
 
@@ -92,12 +159,12 @@
 
 
   <h1>
-    JANコード在庫登録
+    在庫登録
   </h1>
 
 
   <div id="status">
-    起動準備中...
+    カメラを起動しています...
   </div>
 
 
@@ -111,6 +178,82 @@
 
 
   <!-- ========================================= -->
+  <!-- 登録エリア -->
+  <!-- ========================================= -->
+
+  <div id="registerArea">
+
+
+    <div>
+
+      <span class="label">
+        JANコード
+      </span>
+
+      <div id="janDisplay">
+      </div>
+
+    </div>
+
+
+    <div>
+
+      <span class="label">
+        商品名
+      </span>
+
+      <input
+        id="productName"
+        type="text"
+        placeholder="商品名"
+      >
+
+    </div>
+
+
+    <div>
+
+      <span class="label">
+        賞味期限
+      </span>
+
+      <input
+        id="expiryDate"
+        type="date"
+      >
+
+    </div>
+
+
+    <div>
+
+      <span class="label">
+        数量
+      </span>
+
+      <input
+        id="quantity"
+        type="number"
+        value="1"
+        min="1"
+      >
+
+    </div>
+
+
+    <button
+      id="registerButton"
+      type="button">
+
+      登録
+
+    </button>
+
+
+  </div>
+
+
+  <!-- ========================================= -->
   <!-- バーコード読み取りライブラリ -->
   <!-- ========================================= -->
 
@@ -120,364 +263,327 @@
   </script>
 
 
-<script>
-
-  // =====================================================
-  // HTML要素
-  // =====================================================
-
-  const status =
-    document.getElementById("status");
-
-  const result =
-    document.getElementById("result");
+  <script>
 
 
-  // =====================================================
-  // Apps Script Webアプリ
-  // =====================================================
+    // =====================================================
+    // HTML要素
+    // =====================================================
 
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
-
-
-  // =====================================================
-  // 最後に登録したJAN
-  // =====================================================
-
-  let lastJanCode = "";
+    const status =
+      document.getElementById("status");
 
 
-  // =====================================================
-  // JANコード登録
-  // =====================================================
-
-  function registerJanCode(janCode) {
-
-    console.log(
-      "DB登録開始：",
-      janCode
-    );
+    const result =
+      document.getElementById("result");
 
 
-    fetch(
+    const registerArea =
+      document.getElementById("registerArea");
 
-      API_URL,
 
-      {
+    const janDisplay =
+      document.getElementById("janDisplay");
 
-        method: "POST",
 
-        mode: "no-cors",
+    const productName =
+      document.getElementById("productName");
 
-        headers: {
 
-          "Content-Type":
-            "text/plain;charset=utf-8"
+    const expiryDate =
+      document.getElementById("expiryDate");
 
-        },
 
-        body: JSON.stringify({
+    const quantity =
+      document.getElementById("quantity");
 
-          janCode:
-            janCode
 
-        })
+    const registerButton =
+      document.getElementById("registerButton");
+
+
+    // =====================================================
+    // 現在読み取ったJAN
+    // =====================================================
+
+    let currentJanCode = "";
+
+
+    // =====================================================
+    // 最後に読み取ったJAN
+    // =====================================================
+
+    let lastJanCode = "";
+
+
+    // =====================================================
+    // JANコードチェック
+    // =====================================================
+
+    function isValidJAN(code) {
+
+
+      if (
+        !/^\d+$/.test(code)
+      ) {
+
+        return false;
 
       }
 
-    )
 
-    .then(function() {
+      // ---------------------------------------------------
+      // JAN-13
+      // ---------------------------------------------------
 
-      console.log(
-        "DB送信完了：",
-        janCode
-      );
+      if (
+        code.length === 13
+      ) {
 
-    })
-
-    .catch(function(error) {
-
-      console.error(
-        "DB登録エラー：",
-        error
-      );
-
-    });
-
-  }
+        let sum = 0;
 
 
-  // =====================================================
-  // JANコードチェック
-  // =====================================================
+        for (
+          let i = 0;
+          i < 12;
+          i++
+        ) {
 
-  function isValidJAN(code) {
+          const digit =
+            Number(code[i]);
 
 
-    // ---------------------------------------------------
-    // 数字だけか確認
-    // ---------------------------------------------------
+          if (
+            i % 2 === 0
+          ) {
 
-    if (
-      !/^\d+$/.test(code)
-    ) {
+            sum += digit;
+
+          }
+
+          else {
+
+            sum += digit * 3;
+
+          }
+
+        }
+
+
+        const checkDigit =
+          (10 - (sum % 10)) % 10;
+
+
+        return (
+          checkDigit ===
+          Number(code[12])
+        );
+
+      }
+
+
+      // ---------------------------------------------------
+      // JAN-8
+      // ---------------------------------------------------
+
+      if (
+        code.length === 8
+      ) {
+
+        let sum = 0;
+
+
+        for (
+          let i = 0;
+          i < 7;
+          i++
+        ) {
+
+          const digit =
+            Number(code[i]);
+
+
+          if (
+            i % 2 === 0
+          ) {
+
+            sum += digit * 3;
+
+          }
+
+          else {
+
+            sum += digit;
+
+          }
+
+        }
+
+
+        const checkDigit =
+          (10 - (sum % 10)) % 10;
+
+
+        return (
+          checkDigit ===
+          Number(code[7])
+        );
+
+      }
+
 
       return false;
 
     }
 
 
-    // ---------------------------------------------------
-    // JAN-13
-    // ---------------------------------------------------
+    // =====================================================
+    // JAN読み取り成功
+    // =====================================================
 
-    if (
-      code.length === 13
+    function onScanSuccess(
+      decodedText,
+      decodedResult
     ) {
 
-      let sum = 0;
 
+      // ---------------------------------------------------
+      // JANチェック
+      // ---------------------------------------------------
 
-      for (
-        let i = 0;
-        i < 12;
-        i++
+      if (
+        !isValidJAN(decodedText)
       ) {
 
-        const digit =
-          Number(code[i]);
+        console.log(
+          "JANではないため無視：",
+          decodedText
+        );
 
-
-        if (
-          i % 2 === 0
-        ) {
-
-          sum += digit;
-
-        }
-
-        else {
-
-          sum += digit * 3;
-
-        }
+        return;
 
       }
 
 
-      const checkDigit =
-        (10 - (sum % 10)) % 10;
+      // ---------------------------------------------------
+      // 同じJANを連続検出している場合は無視
+      // ---------------------------------------------------
 
-
-      return (
-        checkDigit ===
-        Number(code[12])
-      );
-
-    }
-
-
-    // ---------------------------------------------------
-    // JAN-8
-    // ---------------------------------------------------
-
-    if (
-      code.length === 8
-    ) {
-
-      let sum = 0;
-
-
-      for (
-        let i = 0;
-        i < 7;
-        i++
+      if (
+        decodedText === lastJanCode
       ) {
 
-        const digit =
-          Number(code[i]);
-
-
-        if (
-          i % 2 === 0
-        ) {
-
-          sum += digit * 3;
-
-        }
-
-        else {
-
-          sum += digit;
-
-        }
+        return;
 
       }
 
 
-      const checkDigit =
-        (10 - (sum % 10)) % 10;
+      // ---------------------------------------------------
+      // JAN確定
+      // ---------------------------------------------------
+
+      lastJanCode =
+        decodedText;
 
 
-      return (
-        checkDigit ===
-        Number(code[7])
-      );
-
-    }
+      currentJanCode =
+        decodedText;
 
 
-    // ---------------------------------------------------
-    // JAN-13 / JAN-8 以外
-    // ---------------------------------------------------
+      // ---------------------------------------------------
+      // 表示
+      // ---------------------------------------------------
 
-    return false;
-
-  }
-
-
-  // =====================================================
-  // スキャナー作成
-  // =====================================================
-
-  const scanner =
-    new Html5Qrcode("reader");
+      result.textContent =
+        decodedText;
 
 
-  // =====================================================
-  // 読み取り設定
-  // =====================================================
-
-  const config = {
-
-    fps: 10,
-
-    qrbox: {
-
-      width: 280,
-
-      height: 150
-
-    },
-
-    formatsToSupport: [
-
-      Html5QrcodeSupportedFormats.EAN_13,
-
-      Html5QrcodeSupportedFormats.EAN_8
-
-    ]
-
-  };
+      janDisplay.textContent =
+        decodedText;
 
 
-  // =====================================================
-  // JAN読み取り成功
-  // =====================================================
+      // ---------------------------------------------------
+      // 登録エリア表示
+      // ---------------------------------------------------
 
-  function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
-
-  if (
-    !isValidJAN(decodedText)
-  ) {
-
-    console.log(
-      "JANではないため無視：",
-      decodedText
-    );
-
-    return;
-
-  }
+      registerArea.style.display =
+        "block";
 
 
-  if (
-    decodedText === lastJanCode
-  ) {
-
-    return;
-
-  }
-
-
-  lastJanCode =
-    decodedText;
-
-
-  result.textContent =
-    decodedText;
-
-
-  status.textContent =
-    "読み取り完了";
-
-
-  console.log(
-    "JAN確定：",
-    decodedText
-  );
-
-
-  registerJanCode(
-    decodedText
-  );
-
-
-  setTimeout(
-
-    function() {
+      // ---------------------------------------------------
+      // ステータス
+      // ---------------------------------------------------
 
       status.textContent =
-        "次の商品をスキャンしてください";
-
-    },
-
-    300
-
-  );
-
-}
+        "登録内容を入力してください";
 
 
-  // =====================================================
-  // 読み取り途中のエラー
-  // =====================================================
+      // ---------------------------------------------------
+      // 商品名にフォーカス
+      // ---------------------------------------------------
 
-  function onScanFailure(
-    errorMessage
-  ) {
-
-    // 読み取り途中のエラーは無視
-
-  }
+      productName.focus();
 
 
-  // =====================================================
-  // カメラ起動
-  // =====================================================
+      console.log(
+        "JAN読み取り：",
+        decodedText
+      );
 
-  if (
+    }
 
-    typeof Html5Qrcode ===
-    "undefined"
 
-  ) {
+    // =====================================================
+    // 読み取り途中のエラー
+    // =====================================================
 
-    status.textContent =
-      "バーコードライブラリを読み込めませんでした";
+    function onScanFailure(
+      errorMessage
+    ) {
 
-  }
+      // 読み取り途中のエラーは無視
 
-  else {
+    }
 
-    status.textContent =
-      "カメラを起動しています...";
 
+    // =====================================================
+    // スキャナー
+    // =====================================================
+
+    const scanner =
+      new Html5Qrcode("reader");
+
+
+    // =====================================================
+    // 読み取り設定
+    // =====================================================
+
+    const config = {
+
+      fps: 10,
+
+      qrbox: {
+
+        width: 280,
+
+        height: 150
+
+      },
+
+      formatsToSupport: [
+
+        Html5QrcodeSupportedFormats.EAN_13,
+
+        Html5QrcodeSupportedFormats.EAN_8
+
+      ]
+
+    };
+
+
+    // =====================================================
+    // カメラ起動
+    // =====================================================
 
     scanner.start(
 
@@ -495,12 +601,15 @@
 
     .then(function() {
 
+
       status.textContent =
-        "スキャンしてください";
+        "商品をスキャンしてください";
+
 
     })
 
     .catch(function(error) {
+
 
       console.error(
         "カメラ起動エラー：",
@@ -513,9 +622,102 @@
 
     });
 
-  }
 
-</script>
+    // =====================================================
+    // 登録ボタン
+    // =====================================================
+
+    registerButton.addEventListener(
+      "click",
+      function() {
+
+
+        // -----------------------------------------------
+        // JAN確認
+        // -----------------------------------------------
+
+        if (
+          !currentJanCode
+        ) {
+
+          alert(
+            "JANコードがありません"
+          );
+
+          return;
+
+        }
+
+
+        // -----------------------------------------------
+        // 賞味期限確認
+        // -----------------------------------------------
+
+        if (
+          !expiryDate.value
+        ) {
+
+          alert(
+            "賞味期限を入力してください"
+          );
+
+          return;
+
+        }
+
+
+        // -----------------------------------------------
+        // 数量確認
+        // -----------------------------------------------
+
+        if (
+          !quantity.value ||
+          Number(quantity.value) < 1
+        ) {
+
+          alert(
+            "数量を入力してください"
+          );
+
+          return;
+
+        }
+
+
+        // -----------------------------------------------
+        // 今回はまだDB登録しない
+        // -----------------------------------------------
+
+        console.log(
+          "登録内容",
+          {
+
+            janCode:
+              currentJanCode,
+
+            productName:
+              productName.value,
+
+            expiryDate:
+              expiryDate.value,
+
+            quantity:
+              quantity.value
+
+          }
+        );
+
+
+        alert(
+          "登録内容を確認しました"
+        );
+
+
+      }
+    );
+
+
+  </script>
 
 
 </body>
