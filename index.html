@@ -378,85 +378,70 @@
   // =====================================================
 
   function onScanSuccess(
-    decodedText,
-    decodedResult
+  decodedText,
+  decodedResult
+) {
+
+  if (
+    !isValidJAN(decodedText)
   ) {
 
-
-    // ---------------------------------------------------
-    // JANとして正しいか確認
-    // ---------------------------------------------------
-
-    if (
-      !isValidJAN(decodedText)
-    ) {
-
-      console.log(
-        "JANではないため無視：",
-        decodedText
-      );
-
-      return;
-
-    }
-
-
-    // ---------------------------------------------------
-    // 同じJANを連続検出した場合は無視
-    // ---------------------------------------------------
-
-    if (
-      decodedText === lastJanCode
-    ) {
-
-      return;
-
-    }
-
-
-    // ---------------------------------------------------
-    // 新しいJAN
-    // ---------------------------------------------------
-
-    lastJanCode =
-      decodedText;
-
-
-    // ---------------------------------------------------
-    // 画面表示
-    // ---------------------------------------------------
-
-    result.textContent =
-      decodedText;
-
-
-    status.textContent =
-      "登録中...";
-
-
     console.log(
-      "新しいJAN：",
+      "JANではないため無視：",
       decodedText
     );
 
-
-    // ---------------------------------------------------
-    // DB登録
-    // ---------------------------------------------------
-
-    registerJanCode(
-      decodedText
-    );
-
-
-    // ---------------------------------------------------
-    // 次の商品を待つ
-    // ---------------------------------------------------
-
-    status.textContent =
-      "次の商品をスキャンしてください";
+    return;
 
   }
+
+
+  if (
+    decodedText === lastJanCode
+  ) {
+
+    return;
+
+  }
+
+
+  lastJanCode =
+    decodedText;
+
+
+  result.textContent =
+    decodedText;
+
+
+  status.textContent =
+    "読み取り完了";
+
+
+  console.log(
+    "JAN確定：",
+    decodedText
+  );
+
+
+  registerJanCode(
+    decodedText
+  );
+
+
+  setTimeout(
+
+    function() {
+
+      status.textContent =
+        "次の商品をスキャンしてください";
+
+    },
+
+    300
+
+  );
+
+}
 
 
   // =====================================================
