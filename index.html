@@ -100,8 +100,21 @@
 
 
   <div id="result">
-    まだ読み取っていません
-  </div>
+  まだ読み取っていません
+</div>
+
+
+<button id="registerButton"
+        style="
+          display:none;
+          margin-top:20px;
+          padding:15px 30px;
+          font-size:20px;
+        ">
+
+  登録
+
+</button>
 
 
   <script
@@ -120,6 +133,10 @@
     const result =
       document.getElementById("result");
 
+    const registerButton =
+      document.getElementById("registerButton");
+
+    let currentJanCode = "";
 
     // =====================================================
     // ライブラリ確認
@@ -184,26 +201,33 @@
       // 読み取り成功
       // ===================================================
 
-      function(decodedText, decodedResult) {
+function(decodedText, decodedResult) {
 
-        console.log(
-          "JANコード：",
-          decodedText
-        );
-
-
-        result.textContent =
-          decodedText;
+  console.log(
+    "JANコード：",
+    decodedText
+  );
 
 
-        status.textContent =
-          "読み取り成功";
+  currentJanCode =
+    decodedText;
 
 
-        scanner.stop();
+  result.textContent =
+    decodedText;
 
-      },
 
+  status.textContent =
+    "読み取り成功";
+
+
+  registerButton.style.display =
+    "inline-block";
+
+
+  scanner.stop();
+
+}
 
       // ===================================================
       // 読み取り失敗
