@@ -120,439 +120,417 @@
   </script>
 
 
-  <script>
+<script>
+
+  // =====================================================
+  // HTML要素
+  // =====================================================
+
+  const status =
+    document.getElementById("status");
+
+  const result =
+    document.getElementById("result");
 
 
-    // =====================================================
-    // HTML要素
-    // =====================================================
+  // =====================================================
+  // Apps Script Webアプリ
+  // =====================================================
 
-    const status =
-      document.getElementById("status");
-
-
-    const result =
-      document.getElementById("result");
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
 
 
-    // =====================================================
-    // Apps Script Webアプリ
-    // =====================================================
+  // =====================================================
+  // 最後に登録したJAN
+  // =====================================================
 
-    const API_URL =
-      "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
-
-
-    // =====================================================
-    // 状態
-    // =====================================================
-
-    let currentJanCode = "";
-
-    let scanner = null;
-
-    let isScanning = false;
-
-    let lastJanCode = "";
-
-    let lastScanTime = 0;
+  let lastJanCode = "";
 
 
-    // 同じJANを連続して読まないための時間
+  // =====================================================
+  // JANコード登録
+  // =====================================================
 
-    const DUPLICATE_WAIT =
-      3000;
+  function registerJanCode(janCode) {
+
+    console.log(
+      "DB登録開始：",
+      janCode
+    );
 
 
-    // =====================================================
-    // JANコードをApps Scriptへ送信
-    // =====================================================
+    fetch(
 
-    function registerJanCode(janCode) {
+      API_URL,
 
+      {
+
+        method: "POST",
+
+        mode: "no-cors",
+
+        headers: {
+
+          "Content-Type":
+            "text/plain;charset=utf-8"
+
+        },
+
+        body: JSON.stringify({
+
+          janCode:
+            janCode
+
+        })
+
+      }
+
+    )
+
+    .then(function() {
 
       console.log(
-        "DB登録開始：",
+        "DB送信完了：",
         janCode
       );
 
+    })
 
-      // ---------------------------------------------------
-      // バックグラウンド送信
-      // ---------------------------------------------------
+    .catch(function(error) {
 
-      fetch(
+      console.error(
+        "DB登録エラー：",
+        error
+      );
 
-        API_URL,
-
-        {
-
-          method: "POST",
-
-          mode: "no-cors",
-
-          headers: {
-
-            "Content-Type":
-              "text/plain;charset=utf-8"
-
-          },
-
-          body: JSON.stringify({
-
-            janCode:
-              janCode
-
-          })
-
-        }
-
-      )
-
-      .then(function() {
-
-
-        console.log(
-          "DB登録送信完了：",
-          janCode
-        );
-
-
-      })
-
-      .catch(function(error) {
-
-
-        console.error(
-          "DB登録エラー：",
-          error
-        );
-
-
-      });
-
-    }
-
-
-    // =====================================================
-    // カメラ起動
-    // =====================================================
-
-    function startScanner() {
-
-
-      if (isScanning) {
-
-        return;
-
-      }
-
-
-      // ---------------------------------------------------
-      // スキャナーが存在しない場合
-      // ---------------------------------------------------
-
-      if (!scanner) {
-
-        scanner =
-          new Html5Qrcode("reader");
-
-      }
-
-
-      status.textContent =
-        "スキャンしてください";
-
-
-      const config = {
-
-        fps: 10,
-
-        qrbox: {
-
-          width: 280,
-
-          height: 150
-
-        },
-
-        formatsToSupport: [
-
-          Html5QrcodeSupportedFormats.EAN_13,
-
-          Html5QrcodeSupportedFormats.EAN_8
-
-        ]
-
-      };
-
-
-      // ---------------------------------------------------
-      // カメラ開始
-      // ---------------------------------------------------
-
-      scanner.start(
-
-        {
-          facingMode: "environment"
-        },
-
-        config,
-
-
-        // ================================================
-        // JAN読み取り成功
-        // ================================================
-
-        function(decodedText, decodedResult) {
-
-
-          const now =
-            Date.now();
-
-
-          // ------------------------------------------------
-          // 同じJANの連続読み取り防止
-          // ------------------------------------------------
-
-          if (
-
-            decodedText === lastJanCode &&
-
-            now - lastScanTime <
-              DUPLICATE_WAIT
-
-          ) {
-
-            return;
-
-          }
-
-
-          lastJanCode =
-            decodedText;
-
-
-          lastScanTime =
-            now;
-
-
-          currentJanCode =
-            decodedText;
-
-
-          console.log(
-            "JAN読み取り：",
-            decodedText
-          );
-
-
-          // ------------------------------------------------
-          // 画面表示
-          // ------------------------------------------------
-
-          result.textContent =
-            decodedText;
-
-
-          status.textContent =
-            "登録処理中...";
-
-
-          // ------------------------------------------------
-          // カメラ停止
-          // ------------------------------------------------
-
-          isScanning =
-            false;
-
-
-          scanner.stop()
-
-            .then(function() {
-
-
-              // ==========================================
-              // DB登録を開始
-              // ==========================================
-
-              registerJanCode(
-                currentJanCode
-              );
-
-
-              // ==========================================
-              // すぐ次のスキャンへ
-              // ==========================================
-
-function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
-
-
-  // ===================================================
-  // 同じJANなら無視
-  // ===================================================
-
-  if (
-    decodedText === lastJanCode
-  ) {
-
-    return;
+    });
 
   }
 
 
-  // ===================================================
-  // 新しいJAN
-  // ===================================================
+  // =====================================================
+  // JANコードチェック
+  // =====================================================
 
-  lastJanCode =
-    decodedText;
-
-
-  // ===================================================
-  // JAN表示
-  // ===================================================
-
-  result.textContent =
-    decodedText;
+  function isValidJAN(code) {
 
 
-  status.textContent =
-    "登録処理中...";
+    // ---------------------------------------------------
+    // 数字だけか確認
+    // ---------------------------------------------------
+
+    if (
+      !/^\d+$/.test(code)
+    ) {
+
+      return false;
+
+    }
 
 
-  console.log(
-    "新しいJAN：",
-    decodedText
-  );
+    // ---------------------------------------------------
+    // JAN-13
+    // ---------------------------------------------------
+
+    if (
+      code.length === 13
+    ) {
+
+      let sum = 0;
 
 
-  // ===================================================
-  // DBへ送信
-  // ===================================================
+      for (
+        let i = 0;
+        i < 12;
+        i++
+      ) {
 
-  registerJanCode(
-    decodedText
-  );
-
-
-  // ===================================================
-  // すぐ次の商品を待つ
-  // ===================================================
-
-  status.textContent =
-    "次の商品をスキャンしてください";
-
-}
+        const digit =
+          Number(code[i]);
 
 
-            })
+        if (
+          i % 2 === 0
+        ) {
 
-            .catch(function(error) {
-
-
-              console.error(
-                "カメラ停止エラー：",
-                error
-              );
-
-
-              isScanning =
-                false;
-
-
-              startScanner();
-
-
-            });
-
-
-        },
-
-
-        // ================================================
-        // 読み取り途中のエラー
-        // ================================================
-
-        function(errorMessage) {
-
-          // 無視
+          sum += digit;
 
         }
 
-      )
+        else {
 
-      .then(function() {
+          sum += digit * 3;
 
+        }
 
-        isScanning =
-          true;
-
-
-      })
+      }
 
 
-      .catch(function(error) {
+      const checkDigit =
+        (10 - (sum % 10)) % 10;
 
 
-        console.error(
-          "カメラ起動エラー：",
-          error
-        );
-
-
-        isScanning =
-          false;
-
-
-        status.textContent =
-          "カメラを起動できませんでした";
-
-
-      });
+      return (
+        checkDigit ===
+        Number(code[12])
+      );
 
     }
 
 
-    // =====================================================
-    // ライブラリ確認
-    // =====================================================
+    // ---------------------------------------------------
+    // JAN-8
+    // ---------------------------------------------------
 
     if (
-
-      typeof Html5Qrcode ===
-      "undefined"
-
+      code.length === 8
     ) {
 
+      let sum = 0;
 
-      status.textContent =
-        "バーコードライブラリを読み込めませんでした";
 
+      for (
+        let i = 0;
+        i < 7;
+        i++
+      ) {
+
+        const digit =
+          Number(code[i]);
+
+
+        if (
+          i % 2 === 0
+        ) {
+
+          sum += digit * 3;
+
+        }
+
+        else {
+
+          sum += digit;
+
+        }
+
+      }
+
+
+      const checkDigit =
+        (10 - (sum % 10)) % 10;
+
+
+      return (
+        checkDigit ===
+        Number(code[7])
+      );
 
     }
 
-    else {
+
+    // ---------------------------------------------------
+    // JAN-13 / JAN-8 以外
+    // ---------------------------------------------------
+
+    return false;
+
+  }
 
 
-      status.textContent =
-        "バーコードライブラリ読み込みOK";
+  // =====================================================
+  // スキャナー作成
+  // =====================================================
+
+  const scanner =
+    new Html5Qrcode("reader");
 
 
-      // ---------------------------------------------------
-      // カメラ開始
-      // ---------------------------------------------------
+  // =====================================================
+  // 読み取り設定
+  // =====================================================
 
-      startScanner();
+  const config = {
 
+    fps: 10,
+
+    qrbox: {
+
+      width: 280,
+
+      height: 150
+
+    },
+
+    formatsToSupport: [
+
+      Html5QrcodeSupportedFormats.EAN_13,
+
+      Html5QrcodeSupportedFormats.EAN_8
+
+    ]
+
+  };
+
+
+  // =====================================================
+  // JAN読み取り成功
+  // =====================================================
+
+  function onScanSuccess(
+    decodedText,
+    decodedResult
+  ) {
+
+
+    // ---------------------------------------------------
+    // JANとして正しいか確認
+    // ---------------------------------------------------
+
+    if (
+      !isValidJAN(decodedText)
+    ) {
+
+      console.log(
+        "JANではないため無視：",
+        decodedText
+      );
+
+      return;
 
     }
 
 
-  </script>
+    // ---------------------------------------------------
+    // 同じJANを連続検出した場合は無視
+    // ---------------------------------------------------
+
+    if (
+      decodedText === lastJanCode
+    ) {
+
+      return;
+
+    }
+
+
+    // ---------------------------------------------------
+    // 新しいJAN
+    // ---------------------------------------------------
+
+    lastJanCode =
+      decodedText;
+
+
+    // ---------------------------------------------------
+    // 画面表示
+    // ---------------------------------------------------
+
+    result.textContent =
+      decodedText;
+
+
+    status.textContent =
+      "登録中...";
+
+
+    console.log(
+      "新しいJAN：",
+      decodedText
+    );
+
+
+    // ---------------------------------------------------
+    // DB登録
+    // ---------------------------------------------------
+
+    registerJanCode(
+      decodedText
+    );
+
+
+    // ---------------------------------------------------
+    // 次の商品を待つ
+    // ---------------------------------------------------
+
+    status.textContent =
+      "次の商品をスキャンしてください";
+
+  }
+
+
+  // =====================================================
+  // 読み取り途中のエラー
+  // =====================================================
+
+  function onScanFailure(
+    errorMessage
+  ) {
+
+    // 読み取り途中のエラーは無視
+
+  }
+
+
+  // =====================================================
+  // カメラ起動
+  // =====================================================
+
+  if (
+
+    typeof Html5Qrcode ===
+    "undefined"
+
+  ) {
+
+    status.textContent =
+      "バーコードライブラリを読み込めませんでした";
+
+  }
+
+  else {
+
+    status.textContent =
+      "カメラを起動しています...";
+
+
+    scanner.start(
+
+      {
+        facingMode: "environment"
+      },
+
+      config,
+
+      onScanSuccess,
+
+      onScanFailure
+
+    )
+
+    .then(function() {
+
+      status.textContent =
+        "スキャンしてください";
+
+    })
+
+    .catch(function(error) {
+
+      console.error(
+        "カメラ起動エラー：",
+        error
+      );
+
+
+      status.textContent =
+        "カメラを起動できませんでした";
+
+    });
+
+  }
+
+</script>
 
 
 </body>
