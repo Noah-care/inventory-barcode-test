@@ -532,20 +532,50 @@ async function onScanSuccess(
     // Apps Scriptへ商品検索
     // =================================================
 
-    const response =
-      await fetch(
+// =================================================
+// Apps Scriptへ商品検索
+// =================================================
 
-        API_URL +
-        "?action=product&janCode=" +
-        encodeURIComponent(
-          decodedText
-        )
+const searchUrl =
+  API_URL +
+  "?action=product&janCode=" +
+  encodeURIComponent(
+    decodedText
+  );
 
-      );
+
+console.log(
+  "商品検索URL：",
+  searchUrl
+);
 
 
-    const data =
-      await response.json();
+const response =
+  await fetch(
+    searchUrl
+  );
+
+
+console.log(
+  "商品検索HTTP：",
+  response.status
+);
+
+
+const responseText =
+  await response.text();
+
+
+console.log(
+  "商品検索結果：",
+  responseText
+);
+
+
+const data =
+  JSON.parse(
+    responseText
+  );
 
 
     // =================================================
