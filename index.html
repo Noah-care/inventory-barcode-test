@@ -315,31 +315,139 @@
     }
 
 
-    // =====================================================
-    // 登録ボタン
-    // =====================================================
+// =====================================================
+// Apps Script Webアプリ
+// =====================================================
 
-    registerButton.addEventListener(
-
-      "click",
-
-      function() {
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
 
 
-        console.log(
-          "登録するJANコード：",
-          currentJanCode
-        );
+// =====================================================
+// 登録ボタン
+// =====================================================
+
+registerButton.addEventListener(
+
+  "click",
+
+  async function() {
 
 
-        status.textContent =
-          "登録処理は次のステップで追加します";
+    // -----------------------------------------------
+    // JANコード確認
+    // -----------------------------------------------
+
+    if (!currentJanCode) {
+
+      status.textContent =
+        "JANコードがありません";
+
+      return;
+
+    }
 
 
-      }
+    // -----------------------------------------------
+    // ボタンを一時停止
+    // -----------------------------------------------
 
-    );
+    registerButton.disabled =
+      true;
 
+
+    registerButton.textContent =
+      "登録中...";
+
+
+    status.textContent =
+      "データを送信しています";
+
+
+    try {
+
+
+      // ---------------------------------------------
+      // Apps Scriptへ送信
+      // ---------------------------------------------
+
+      await fetch(
+
+        API_URL,
+
+        {
+
+          method: "POST",
+
+          mode: "no-cors",
+
+          headers: {
+
+            "Content-Type":
+              "text/plain;charset=utf-8"
+
+          },
+
+          body: JSON.stringify({
+
+            janCode:
+              currentJanCode
+
+          })
+
+        }
+
+      );
+
+
+      // ---------------------------------------------
+      // 登録完了
+      // ---------------------------------------------
+
+      status.textContent =
+        "登録しました";
+
+
+      registerButton.textContent =
+        "登録完了";
+
+
+      console.log(
+        "登録JAN：",
+        currentJanCode
+      );
+
+
+    }
+
+
+    catch (error) {
+
+
+      console.error(
+        "登録エラー：",
+        error
+      );
+
+
+      status.textContent =
+        "登録に失敗しました";
+
+
+      registerButton.disabled =
+        false;
+
+
+      registerButton.textContent =
+        "登録";
+
+
+    }
+
+
+  }
+
+);
 
   </script>
 
