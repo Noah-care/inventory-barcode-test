@@ -10,6 +10,7 @@
 
   <title>在庫登録</title>
 
+
   <style>
 
     body {
@@ -150,6 +151,13 @@
 
     }
 
+
+    #registerButton:disabled {
+
+      background: #999;
+
+    }
+
   </style>
 
 </head>
@@ -264,6 +272,14 @@
 
 
   <script>
+
+
+    // =====================================================
+    // Apps Script Webアプリ
+    // =====================================================
+
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
 
 
     // =====================================================
@@ -436,253 +452,235 @@
 
     }
 
-// =====================================================
-// JAN読み取り成功
-// =====================================================
 
-// =====================================================
-// JAN読み取り成功
-// =====================================================
+    // =====================================================
+    // JAN読み取り成功
+    // =====================================================
 
-async function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
+    async function onScanSuccess(
+      decodedText,
+      decodedResult
+    ) {
 
 
-  // ---------------------------------------------------
-  // JANチェック
-  // ---------------------------------------------------
+      // ---------------------------------------------------
+      // JANチェック
+      // ---------------------------------------------------
 
-  if (
-    !isValidJAN(decodedText)
-  ) {
+      if (
+        !isValidJAN(decodedText)
+      ) {
 
-    console.log(
-      "JANではないため無視：",
-      decodedText
-    );
+        console.log(
+          "JANではないため無視：",
+          decodedText
+        );
 
-    return;
+        return;
 
-  }
+      }
 
 
-  // ---------------------------------------------------
-  // 同じJANを連続検出している場合は無視
-  // ---------------------------------------------------
+      // ---------------------------------------------------
+      // 同じJANの連続検出を無視
+      // ---------------------------------------------------
 
-  if (
-    decodedText === lastJanCode
-  ) {
+      if (
+        decodedText === lastJanCode
+      ) {
 
-    return;
+        return;
 
-  }
+      }
 
 
-  // ---------------------------------------------------
-  // JAN確定
-  // ---------------------------------------------------
+      // ---------------------------------------------------
+      // JAN確定
+      // ---------------------------------------------------
 
-  lastJanCode =
-    decodedText;
+      lastJanCode =
+        decodedText;
 
 
-  currentJanCode =
-    decodedText;
+      currentJanCode =
+        decodedText;
 
 
-  // ---------------------------------------------------
-  // JAN表示
-  // ---------------------------------------------------
+      // ---------------------------------------------------
+      // JAN表示
+      // ---------------------------------------------------
 
-  result.textContent =
-    decodedText;
+      result.textContent =
+        decodedText;
 
 
-  janDisplay.textContent =
-    decodedText;
+      janDisplay.textContent =
+        decodedText;
 
 
-  // ---------------------------------------------------
-  // 登録エリア表示
-  // ---------------------------------------------------
+      // ---------------------------------------------------
+      // 登録エリア表示
+      // ---------------------------------------------------
 
-  registerArea.style.display =
-    "block";
+      registerArea.style.display =
+        "block";
 
 
-  // ---------------------------------------------------
-  // 商品名検索中
-  // ---------------------------------------------------
+      // ---------------------------------------------------
+      // 商品情報確認
+      // ---------------------------------------------------
 
-  status.textContent =
-    "商品情報を確認しています...";
+      status.textContent =
+        "商品情報を確認しています...";
 
-
-  productName.value =
-    "";
-
-
-  try {
-
-
-    // =================================================
-    // Apps Scriptへ商品検索
-    // =================================================
-
-// =================================================
-// Apps Scriptへ商品検索
-// =================================================
-
-const searchUrl =
-  API_URL +
-  "?action=product&janCode=" +
-  encodeURIComponent(
-    decodedText
-  );
-
-
-console.log(
-  "商品検索URL：",
-  searchUrl
-);
-
-
-const response =
-  await fetch(
-    searchUrl
-  );
-
-
-console.log(
-  "商品検索HTTP：",
-  response.status
-);
-
-
-const responseText =
-  await response.text();
-
-
-console.log(
-  "商品検索結果：",
-  responseText
-);
-
-
-
-
-
-// =================================================
-// JSON変換
-// =================================================
-
-const data =
-  JSON.parse(
-    responseText
-  );
-
-
-    // =================================================
-    // 商品発見
-    // =================================================
-
-if (
-  data.found
-) {
-
-  console.log(
-    "取得した商品名：",
-    data.productName
-  );
-
-
-  console.log(
-    "商品名入力欄：",
-    productName
-  );
-
-
-  productName.value =
-    data.productName || "";
-
-
-  console.log(
-    "入力後の商品名：",
-    productName.value
-  );
-
-
-  status.textContent =
-    "商品を確認しました";
-
-}
-
-
-      console.log(
-        "商品マスタ：",
-        data.productName
-      );
-
-    }
-
-
-    // =================================================
-    // 商品未登録
-    // =================================================
-
-    else {
 
       productName.value =
         "";
 
 
-      status.textContent =
-        "未登録商品です。商品名を入力してください";
+      try {
 
 
-      productName.focus();
+        // ===============================================
+        // Apps Scriptへ商品検索
+        // ===============================================
+
+        const searchUrl =
+          API_URL +
+          "?action=product&janCode=" +
+          encodeURIComponent(
+            decodedText
+          );
 
 
-      console.log(
-        "商品マスタにありません：",
-        decodedText
-      );
+        console.log(
+          "商品検索URL：",
+          searchUrl
+        );
+
+
+        const response =
+          await fetch(
+            searchUrl
+          );
+
+
+        console.log(
+          "商品検索HTTP：",
+          response.status
+        );
+
+
+        const responseText =
+          await response.text();
+
+
+        console.log(
+          "商品検索結果：",
+          responseText
+        );
+
+
+        // ===============================================
+        // JSON変換
+        // ===============================================
+
+        const data =
+          JSON.parse(
+            responseText
+          );
+
+
+        // ===============================================
+        // 商品発見
+        // ===============================================
+
+        if (
+          data.found
+        ) {
+
+
+          console.log(
+            "取得した商品名：",
+            data.productName
+          );
+
+
+          console.log(
+            "商品名入力欄：",
+            productName
+          );
+
+
+          productName.value =
+            data.productName || "";
+
+
+          console.log(
+            "入力後の商品名：",
+            productName.value
+          );
+
+
+          status.textContent =
+            "商品を確認しました";
+
+
+        }
+
+
+        // ===============================================
+        // 商品未登録
+        // ===============================================
+
+        else {
+
+
+          productName.value =
+            "";
+
+
+          status.textContent =
+            "未登録商品です。商品名を入力してください";
+
+
+          productName.focus();
+
+
+          console.log(
+            "商品マスタにありません：",
+            decodedText
+          );
+
+        }
+
+
+      }
+
+
+      catch (error) {
+
+
+        // ===============================================
+        // 商品検索エラー
+        // ===============================================
+
+        console.error(
+          "商品検索エラー：",
+          error
+        );
+
+
+        status.textContent =
+          "商品情報を取得できませんでした";
+
+
+        productName.focus();
+
+      }
 
     }
 
-
-  }
-
-
-  catch (error) {
-
-
-    // =================================================
-    // 商品検索エラー
-    // =================================================
-
-    console.error(
-      "商品検索エラー：",
-      error
-    );
-
-
-    status.textContent =
-      "商品情報を取得できませんでした";
-
-
-    productName.focus();
-
-  }
-
-}
-
-
-
-    
 
     // =====================================================
     // 読み取り途中のエラー
@@ -702,7 +700,9 @@ if (
     // =====================================================
 
     const scanner =
-      new Html5Qrcode("reader");
+      new Html5Qrcode(
+        "reader"
+      );
 
 
     // =====================================================
@@ -778,237 +778,234 @@ if (
     // 登録ボタン
     // =====================================================
 
-    // =====================================================
-// Apps Script Webアプリ
-// =====================================================
-
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
+    registerButton.addEventListener(
+      "click",
+      async function() {
 
 
-// =====================================================
-// 登録ボタン
-// =====================================================
+        // -------------------------------------------------
+        // JAN確認
+        // -------------------------------------------------
 
-registerButton.addEventListener(
-  "click",
-  async function() {
+        if (
+          !currentJanCode
+        ) {
 
+          alert(
+            "JANコードがありません"
+          );
 
-    // ---------------------------------------------------
-    // JAN確認
-    // ---------------------------------------------------
-
-    if (!currentJanCode) {
-
-      alert(
-        "JANコードがありません"
-      );
-
-      return;
-
-    }
-
-
-    // ---------------------------------------------------
-    // 賞味期限確認
-    // ---------------------------------------------------
-
-    if (!expiryDate.value) {
-
-      alert(
-        "賞味期限を入力してください"
-      );
-
-      return;
-
-    }
-
-
-    // ---------------------------------------------------
-    // 数量確認
-    // ---------------------------------------------------
-
-    if (
-      !quantity.value ||
-      Number(quantity.value) < 1
-    ) {
-
-      alert(
-        "数量を入力してください"
-      );
-
-      return;
-
-    }
-
-
-    // ---------------------------------------------------
-    // 登録ボタンを一時停止
-    // ---------------------------------------------------
-
-    registerButton.disabled =
-      true;
-
-
-    registerButton.textContent =
-      "登録中...";
-
-
-    status.textContent =
-      "登録しています...";
-
-
-    try {
-
-
-      // -------------------------------------------------
-      // Apps Scriptへ送信
-      // -------------------------------------------------
-
-      await fetch(
-
-        API_URL,
-
-        {
-
-          method: "POST",
-
-          mode: "no-cors",
-
-          headers: {
-
-            "Content-Type":
-              "text/plain;charset=utf-8"
-
-          },
-
-          body: JSON.stringify({
-
-            janCode:
-              currentJanCode,
-
-            productName:
-              productName.value,
-
-            expiryDate:
-              expiryDate.value,
-
-            quantity:
-              Number(quantity.value)
-
-          })
+          return;
 
         }
 
-      );
+
+        // -------------------------------------------------
+        // 賞味期限確認
+        // -------------------------------------------------
+
+        if (
+          !expiryDate.value
+        ) {
+
+          alert(
+            "賞味期限を入力してください"
+          );
+
+          return;
+
+        }
 
 
-      // -------------------------------------------------
-      // 登録完了
-      // -------------------------------------------------
+        // -------------------------------------------------
+        // 数量確認
+        // -------------------------------------------------
 
-      status.textContent =
-        "登録しました";
+        if (
+          !quantity.value ||
+          Number(quantity.value) < 1
+        ) {
 
+          alert(
+            "数量を入力してください"
+          );
 
-      alert(
-        "登録しました"
-      );
+          return;
 
-
-      console.log(
-        "登録完了：",
-        currentJanCode
-      );
-
-
-      // -------------------------------------------------
-      // 入力欄クリア
-      // -------------------------------------------------
-
-      productName.value =
-        "";
-
-      expiryDate.value =
-        "";
-
-      quantity.value =
-        1;
+        }
 
 
-      // -------------------------------------------------
-      // 次の商品へ
-      // -------------------------------------------------
+        // -------------------------------------------------
+        // 登録ボタン停止
+        // -------------------------------------------------
 
-      currentJanCode =
-        "";
-
-      lastJanCode =
-        "";
+        registerButton.disabled =
+          true;
 
 
-      janDisplay.textContent =
-        "";
+        registerButton.textContent =
+          "登録中...";
 
 
-      result.textContent =
-        "次の商品を読み取ってください";
+        status.textContent =
+          "登録しています...";
 
 
-      registerArea.style.display =
-        "none";
+        try {
 
 
-      status.textContent =
-        "次の商品をスキャンしてください";
+          // ===============================================
+          // Apps Scriptへ送信
+          // ===============================================
+
+          await fetch(
+
+            API_URL,
+
+            {
+
+              method: "POST",
+
+              mode: "no-cors",
+
+              headers: {
+
+                "Content-Type":
+                  "text/plain;charset=utf-8"
+
+              },
+
+              body: JSON.stringify({
+
+                janCode:
+                  currentJanCode,
+
+                productName:
+                  productName.value,
+
+                expiryDate:
+                  expiryDate.value,
+
+                quantity:
+                  Number(
+                    quantity.value
+                  )
+
+              })
+
+            }
+
+          );
 
 
-    }
+          // ===============================================
+          // 登録完了
+          // ===============================================
+
+          status.textContent =
+            "登録しました";
 
 
-    catch (error) {
+          alert(
+            "登録しました"
+          );
 
 
-      // -------------------------------------------------
-      // 登録エラー
-      // -------------------------------------------------
-
-      console.error(
-        "登録エラー：",
-        error
-      );
+          console.log(
+            "登録完了：",
+            currentJanCode
+          );
 
 
-      status.textContent =
-        "登録に失敗しました";
+          // ===============================================
+          // 入力欄クリア
+          // ===============================================
+
+          productName.value =
+            "";
 
 
-      alert(
-        "登録に失敗しました"
-      );
-
-    }
+          expiryDate.value =
+            "";
 
 
-    finally {
+          quantity.value =
+            1;
 
 
-      // -------------------------------------------------
-      // 登録ボタン復帰
-      // -------------------------------------------------
+          // ===============================================
+          // 次の商品へ
+          // ===============================================
 
-      registerButton.disabled =
-        false;
+          currentJanCode =
+            "";
 
 
-      registerButton.textContent =
-        "登録";
+          lastJanCode =
+            "";
 
-    }
 
-  }
-);
+          janDisplay.textContent =
+            "";
+
+
+          result.textContent =
+            "次の商品を読み取ってください";
+
+
+          registerArea.style.display =
+            "none";
+
+
+          status.textContent =
+            "次の商品をスキャンしてください";
+
+
+        }
+
+
+        catch (error) {
+
+
+          // ===============================================
+          // 登録エラー
+          // ===============================================
+
+          console.error(
+            "登録エラー：",
+            error
+          );
+
+
+          status.textContent =
+            "登録に失敗しました";
+
+
+          alert(
+            "登録に失敗しました"
+          );
+
+        }
+
+
+        finally {
+
+
+          // ===============================================
+          // 登録ボタン復帰
+          // ===============================================
+
+          registerButton.disabled =
+            false;
+
+
+          registerButton.textContent =
+            "登録";
+
+        }
+
+      }
+    );
 
 
   </script>
