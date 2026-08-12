@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>在庫メモ</title>
+
+
+  <style>
+
+    body {
+
+      font-family: sans-serif;
+
+      margin: 0;
+
+      padding: 20px;
+
+      background: #f5f5f5;
+
+    }
+
+
+    h1 {
+
+      font-size: 24px;
+
+      margin-bottom: 20px;
+
+    }
+
+
+    #status {
+
+      margin-bottom: 20px;
+
+      font-size: 16px;
+
+    }
+
+
+    #stockList {
+
+      background: white;
+
+      border-radius: 10px;
+
+      padding: 10px;
+
+    }
+
+
+    .item {
+
+      padding: 15px 10px;
+
+      border-bottom: 1px solid #ddd;
+
+    }
+
+
+    .item:last-child {
+
+      border-bottom: none;
+
+    }
+
+
+    .product {
+
+      font-size: 18px;
+
+      font-weight: bold;
+
+    }
+
+
+    .detail {
+
+      margin-top: 5px;
+
+      font-size: 15px;
+
+      color: #555;
+
+    }
+
+
+    .empty {
+
+      padding: 20px;
+
+      text-align: center;
+
+      color: #777;
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <h1>
+    在庫メモ
+  </h1>
+
+
+  <div id="status">
+    在庫情報を確認しています...
+  </div>
+
+
+  <div id="stockList">
+  </div>
+
+
+  <script>
+
+
+    // =====================================================
+    // Apps Script
+    // =====================================================
+
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbyErStqYsz6WsJw7VvZFYyBr3DAYlOyDSAcX7oTLgvQMz4JLLHKTgCaiafm4CnxE1Pr/exec";
+
+
+    // =====================================================
+    // HTML要素
+    // =====================================================
+
+    const status =
+      document.getElementById("status");
+
+
+    const stockList =
+      document.getElementById("stockList");
+
+
+    // =====================================================
+    // 在庫取得
+    // =====================================================
+
+    async function loadStock() {
+
+
+      try {
+
+
+        const response =
+          await fetch(
+            API_URL +
+            "?action=stock"
+          );
+
+
+        const data =
+          await response.json();
+
+
+        console.log(
+          "在庫情報：",
+          data
+        );
+
+
+        // =================================================
+        // データ確認
+        // =================================================
+
+        if (
+          !data.success
+        ) {
+
+          throw new Error(
+            data.error ||
+            "在庫情報を取得できませんでした"
+          );
+
+        }
+
+
+        // =================================================
+        // データなし
+        // =================================================
+
+        if (
+          !data.items ||
+          data.items.length === 0
+        ) {
+
+          stockList.innerHTML =
+            '<div class="empty">在庫がありません</div>';
+
+
+          status.textContent =
+            "在庫確認完了";
+
+
+          return;
+
+        }
+
+
+        // =================================================
+        // TOP5表示
+        // =================================================
+
+        stockList.innerHTML =
+          "";
+
+
+        data.items
+          .slice(0, 5)
+          .forEach(function(item) {
+
+
+            const div =
+              document.createElement("div");
+
+
+            div.className =
+              "item";
+
+
+            div.innerHTML =
+
+              '<div class="product">' +
+
+              item.productName +
+
+              '</div>' +
+
+              '<div class="detail">' +
+
+              '賞味期限：' +
+              item.expiryDate +
+
+              '　数量：' +
+              item.quantity +
+
+              '</div>';
+
+
+            stockList.appendChild(
+              div
+            );
+
+
+          });
+
+
+        status.textContent =
+          "賞味期限の早いもの TOP5";
+
+
+      }
+
+
+      catch (error) {
+
+
+        console.error(
+          "在庫取得エラー：",
+          error
+        );
+
+
+        status.textContent =
+          "在庫情報を取得できませんでした";
+
+
+        stockList.innerHTML =
+
+          '<div class="empty">' +
+
+          'データを取得できませんでした' +
+
+          '</div>';
+
+      }
+
+    }
+
+
+    // =====================================================
+    // 起動
+    // =====================================================
+
+    loadStock();
+
+
+  </script>
+
+
+</body>
+
+</html>
