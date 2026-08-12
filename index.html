@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 
 <head>
 
@@ -8,7 +8,7 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
 
-  <title>JANコードテスト</title>
+  <title>JANコード読み取りテスト</title>
 
 
   <style>
@@ -47,6 +47,10 @@
 
       background: white;
 
+      border-radius: 10px;
+
+      overflow: hidden;
+
     }
 
 
@@ -77,6 +81,27 @@
 
     }
 
+
+    #registerButton {
+
+      display: none;
+
+      margin-top: 20px;
+
+      padding: 15px 30px;
+
+      font-size: 20px;
+
+      border: none;
+
+      border-radius: 8px;
+
+      background: #333;
+
+      color: white;
+
+    }
+
   </style>
 
 </head>
@@ -100,22 +125,20 @@
 
 
   <div id="result">
-  まだ読み取っていません
-</div>
+    まだ読み取っていません
+  </div>
 
 
-<button id="registerButton"
-        style="
-          display:none;
-          margin-top:20px;
-          padding:15px 30px;
-          font-size:20px;
-        ">
+  <button id="registerButton">
 
-  登録
+    登録
 
-</button>
+  </button>
 
+
+  <!-- ========================================= -->
+  <!-- バーコード読み取りライブラリ -->
+  <!-- ========================================= -->
 
   <script
     src="https://unpkg.com/html5-qrcode"
@@ -125,6 +148,9 @@
 
   <script>
 
+    // =====================================================
+    // HTML要素
+    // =====================================================
 
     const status =
       document.getElementById("status");
@@ -133,16 +159,23 @@
     const result =
       document.getElementById("result");
 
+
     const registerButton =
       document.getElementById("registerButton");
 
+
+    // 読み取ったJANコードを保持
+
     let currentJanCode = "";
+
 
     // =====================================================
     // ライブラリ確認
     // =====================================================
 
-    if (typeof Html5Qrcode === "undefined") {
+    if (
+      typeof Html5Qrcode === "undefined"
+    ) {
 
       status.textContent =
         "バーコードライブラリを読み込めませんでした";
@@ -154,103 +187,158 @@
       status.textContent =
         "バーコードライブラリ読み込みOK";
 
+
+      // ===================================================
+      // スキャナー作成
+      // ===================================================
+
+      const scanner =
+        new Html5Qrcode("reader");
+
+
+      // ===================================================
+      // 読み取り設定
+      // ===================================================
+
+      const config = {
+
+        fps: 10,
+
+        qrbox: {
+
+          width: 280,
+
+          height: 150
+
+        },
+
+        formatsToSupport: [
+
+          Html5QrcodeSupportedFormats.EAN_13,
+
+          Html5QrcodeSupportedFormats.EAN_8
+
+        ]
+
+      };
+
+
+      // ===================================================
+      // カメラ起動
+      // ===================================================
+
+      scanner.start(
+
+        {
+          facingMode: "environment"
+        },
+
+        config,
+
+
+        // ================================================
+        // 読み取り成功
+        // ================================================
+
+        function(decodedText, decodedResult) {
+
+
+          console.log(
+            "JANコード：",
+            decodedText
+          );
+
+
+          // JANコードを保持
+
+          currentJanCode =
+            decodedText;
+
+
+          // 画面表示
+
+          result.textContent =
+            decodedText;
+
+
+          status.textContent =
+            "読み取り成功";
+
+
+          // 登録ボタン表示
+
+          registerButton.style.display =
+            "inline-block";
+
+
+          // カメラ停止
+
+          scanner.stop();
+
+
+        },
+
+
+        // ================================================
+        // 読み取り途中のエラー
+        // ================================================
+
+        function(errorMessage) {
+
+          // 読み取り途中のエラーは無視
+
+        }
+
+      )
+
+
+      // ===================================================
+      // カメラ起動エラー
+      // ===================================================
+
+      .catch(function(error) {
+
+
+        console.error(
+          "カメラ起動エラー：",
+          error
+        );
+
+
+        status.textContent =
+          "カメラを起動できませんでした";
+
+
+      });
+
+
     }
 
 
     // =====================================================
-    // バーコード読み取り
+    // 登録ボタン
     // =====================================================
 
-    const scanner =
-      new Html5Qrcode("reader");
+    registerButton.addEventListener(
+
+      "click",
+
+      function() {
 
 
-    const config = {
-
-      fps: 10,
-
-      qrbox: {
-
-        width: 280,
-
-        height: 150
-
-      },
-
-      formatsToSupport: [
-
-        Html5QrcodeSupportedFormats.EAN_13,
-
-        Html5QrcodeSupportedFormats.EAN_8
-
-      ]
-
-    };
+        console.log(
+          "登録するJANコード：",
+          currentJanCode
+        );
 
 
-    scanner.start(
+        status.textContent =
+          "登録処理は次のステップで追加します";
 
-      {
-        facingMode: "environment"
-      },
-
-      config,
-
-
-      // ===================================================
-      // 読み取り成功
-      // ===================================================
-
-function(decodedText, decodedResult) {
-
-  console.log(
-    "JANコード：",
-    decodedText
-  );
-
-
-  currentJanCode =
-    decodedText;
-
-
-  result.textContent =
-    decodedText;
-
-
-  status.textContent =
-    "読み取り成功";
-
-
-  registerButton.style.display =
-    "inline-block";
-
-
-  scanner.stop();
-
-}
-
-      // ===================================================
-      // 読み取り失敗
-      // ===================================================
-
-      function(errorMessage) {
-
-        // 読み取り途中の失敗は無視
 
       }
 
-    )
-
-
-    .catch(function(error) {
-
-      console.error(error);
-
-
-      status.textContent =
-        "カメラを起動できませんでした";
-
-    });
+    );
 
 
   </script>
