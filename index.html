@@ -589,16 +589,36 @@ const data =
     // 商品発見
     // =================================================
 
-    if (
-      data.found
-    ) {
+if (
+  data.found
+) {
 
-      productName.value =
-        data.productName || "";
+  console.log(
+    "取得した商品名：",
+    data.productName
+  );
 
 
-      status.textContent =
-        "商品を確認しました";
+  console.log(
+    "商品名入力欄：",
+    productName
+  );
+
+
+  productName.value =
+    data.productName || "";
+
+
+  console.log(
+    "入力後の商品名：",
+    productName.value
+  );
+
+
+  status.textContent =
+    "商品を確認しました";
+
+}
 
 
       console.log(
